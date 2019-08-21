@@ -144,8 +144,9 @@ if __name__ == '__main__':
         os.mkdir('./expr')
     # read train set
     # dataset = baiduDataset("H:/DL-DATASET/BaiduTextR/train_images/train_images", "H:/DL-DATASET/BaiduTextR/train.list", params.alphabet, True)
-    dataset = baiduDataset("H:/DL-DATASET/360M/images", "E:/08-Github-resources/00-MY-GitHub-Entries/crnn_chinese_characters_rec-master/crnn_chinese_characters_rec-master/label/train.txt", params.alphabet, False, (params.imgW, params.imgH))
-    val_dataset = baiduDataset("H:/DL-DATASET/360M/images", "E:/08-Github-resources/00-MY-GitHub-Entries/crnn_chinese_characters_rec-master/crnn_chinese_characters_rec-master/label/test.txt", params.alphabet, False, (params.imgW, params.imgH))
+    dataset = baiduDataset("/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/to_lmdb/train_images", "/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/to_lmdb/train.txt", params.alphabet, False, (params.imgW, params.imgH))
+    val_dataset = baiduDataset("/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/to_lmdb/train_images", "/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/to_lmdb/train.txt", params.alphabet, False, (params.imgW, params.imgH))
+    # val_dataset = baiduDataset("H:/DL-DATASET/360M/images", "E:/08-Github-resources/00-MY-GitHub-Entries/crnn_chinese_characters_rec-master/crnn_chinese_characters_rec-master/label/test.txt", params.alphabet, False, (params.imgW, params.imgH))
     # dataset = baiduDataset("/media/hane/DL-DATASET/360M/images", "E:/08-Github-resources/00-MY-GitHub-Entries/crnn_chinese_characters_rec-master/crnn_chinese_characters_rec-master/label/train.txt", params.alphabet, False)
     # val_dataset = baiduDataset("/media/hane/DL-DATASET/360M/images", "E:/08-Github-resources/00-MY-GitHub-Entries/crnn_chinese_characters_rec-master/crnn_chinese_characters_rec-master/label/test.txt", params.alphabet, False)
 
@@ -180,4 +181,5 @@ if __name__ == '__main__':
         optimizer = optim.RMSprop(crnn.parameters(), lr=params.lr)
 
     crnn.register_backward_hook(backward_hook)
+    print(params.experiment)
     main(crnn, train_loader, val_loader, criterion, optimizer)
