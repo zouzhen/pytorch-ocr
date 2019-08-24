@@ -1,4 +1,5 @@
 __pycache__/
 to_lmdb/lmdb/
-.idea/
-data/
+data/360label
+data/images
+

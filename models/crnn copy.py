@@ -1,40 +1,13 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 class BidirectionalLSTM(nn.Module):
     # Inputs hidden units Out
     def __init__(self, nIn, nHidden, nOut):
         super(BidirectionalLSTM, self).__init__()
+
         self.rnn = nn.LSTM(nIn, nHidden, bidirectional=True)
         self.embedding = nn.Linear(nHidden * 2, nOut)
-
-    # def forward(self, padded_input):
-    #     total_length = padded_input.size(1) # get the max sequence length
-    #     # input_lengths = torch.LongTensor(padded_input.size(0))
-    #     print('input_size:',padded_input.size(0),padded_input.size(1),padded_input.size(2))
-    #     # 得到该batch中每一个sample的序列长度
-    #     # input_lengths = torch.LongTensor([torch.max(padded_input[i, :].data.nonzero()) + 1 for i in range(padded_input.size(0))])
-    #     input_lengths = []
-    #     for i in range(padded_input.size(0)):
-    #         input_lengths.append([torch.max(padded_input[i][j, :].data.nonzero()) + 1 for j in range(padded_input.size(1))])
-    #     input_lengths = torch.LongTensor(input_lengths)
-    #     print('input_lengths_size:',input_lengths.size())
-    #     print('input_lengths:',input_lengths)
-    #     # input_lengths = torch.LongTensor([torch.max(padded_input[i, :].data.nonzero()) + 1 )])
-    #     # input_lengths, perm_idx = input_lengths.sort(1, descending=True)
-    #     # input_seqs = padded_input[perm_idx][:, :input_lengths.max()]
-    #     # print(input_lengths)
-    #     # print(perm_idx)
-    #     packed_input = pack_padded_sequence(padded_input, input_lengths,
-    #                                         batch_first=True)
-    #     print(packed_input.data.size())
-    #     packed_output, _ = self.rnn(packed_input.data)
-    #     output, _ = pad_packed_sequence(packed_output, batch_first=True,
-    #                                     total_length=padded_input.size(1))
-        
-    #     return output
 
     def forward(self, input):
         recurrent, _ = self.rnn(input)
@@ -92,17 +65,13 @@ class CRNN(nn.Module):
             BidirectionalLSTM(512, nh, nh),
             BidirectionalLSTM(nh, nh, nclass))
 
-    def forward(self, input, is_mixed=False):
+    def forward(self, input):
         # conv features
         #print('---forward propagation---')
         conv = self.cnn(input)
-        # print('conv',conv.size())
         b, c, h, w = conv.size()
         assert h == 1, "the height of conv must be 1"
         conv = conv.squeeze(2) # b *512 * width
-        # conv = conv.permute(0, 2, 1)  # [b, w, c]
         conv = conv.permute(2, 0, 1)  # [w, b, c]
         output = F.log_softmax(self.rnn(conv), dim=2)
-        if is_mixed:
-            output = output.permute(1, 0, 2)  # [w, b, c]
         return output

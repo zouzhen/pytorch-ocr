@@ -7,7 +7,6 @@ import math
 import os
 import torch
 from skimage.transform import resize
-import utils
 import params
 from PIL import Image
 
@@ -53,7 +52,7 @@ class baiduDataset(Dataset):
 		## already have been computed
 		image = image.astype(np.float32) / 255.
 		image = torch.from_numpy(image).type(torch.FloatTensor)
-		image.sub_(params.mean).div_(params.std)
+		image.sub_(float(params.mean)).div_(float(params.std))
 
 		return image
 
