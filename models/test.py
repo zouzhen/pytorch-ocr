@@ -121,68 +121,73 @@ from torch.nn import utils as nn_utils
 
 
 
-import torch
-import torch.nn as nn
+# import torch
+# import torch.nn as nn
 
-DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+# DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-class LSTMTest(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.embedding = nn.Embedding(10, 32)
-        self.lstm = nn.LSTM(32, 5, batch_first=True)
-        self.hidden2tag = nn.Linear(5, 10)
-        self.logSoftmax = nn.LogSoftmax(dim=2)
+# class LSTMTest(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.embedding = nn.Embedding(10, 32)
+#         self.lstm = nn.LSTM(32, 5, batch_first=True)
+#         self.hidden2tag = nn.Linear(5, 10)
+#         self.logSoftmax = nn.LogSoftmax(dim=2)
 
-    def init_hidden(self, batch_size=1):
-        return (torch.empty(batch_size, 1, 5, device=DEVICE).normal_(),
-                torch.empty(batch_size, 1, 5, device=DEVICE).normal_())
+#     def init_hidden(self, batch_size=1):
+#         return (torch.empty(batch_size, 1, 5, device=DEVICE).normal_(),
+#                 torch.empty(batch_size, 1, 5, device=DEVICE).normal_())
 
-    def forward(self, sentence, sentence_lengths, hidden):
-        sentence_lengths = sentence_lengths.type(torch.LongTensor)
-        embeds = self.embedding(sentence.long())
-        embeds = torch.nn.utils.rnn.pack_padded_sequence(embeds, 
-				 sentence_lengths.to(torch.device('cpu')), batch_first=True)
-        hidden0 = [x.permute(1,0,2).contiguous() for x in hidden]
-        lstm_out, hidden0 = self.lstm(embeds, hidden0)
-        lstm_out, _ = torch.nn.utils.rnn.pad_packed_sequence(lstm_out, 
-					  batch_first=True, total_length=sentence.shape[1])
-        tag_space = self.hidden2tag(lstm_out)
-        tag_scores = self.logSoftmax(tag_space)
-        return tag_scores, tag_space
+#     def forward(self, sentence, sentence_lengths, hidden):
+#         sentence_lengths = sentence_lengths.type(torch.LongTensor)
+#         embeds = self.embedding(sentence.long())
+#         embeds = torch.nn.utils.rnn.pack_padded_sequence(embeds, 
+# 				 sentence_lengths.to(torch.device('cpu')), batch_first=True)
+#         hidden0 = [x.permute(1,0,2).contiguous() for x in hidden]
+#         lstm_out, hidden0 = self.lstm(embeds, hidden0)
+#         lstm_out, _ = torch.nn.utils.rnn.pad_packed_sequence(lstm_out, 
+# 					  batch_first=True, total_length=sentence.shape[1])
+#         tag_space = self.hidden2tag(lstm_out)
+#         tag_scores = self.logSoftmax(tag_space)
+#         return tag_scores, tag_space
 
-def train():
-    try:
-        print('number of GPUs available:{}'.format(torch.cuda.device_count()))
-        print('device name:{}'.format(torch.cuda.get_device_name(0)))
-    except:
-        pass
-    sentence = torch.rand(100, 8, device=DEVICE)
-    sentence = torch.abs(sentence * (10)).int()
-    sentence_lengths = [sentence.shape[1]] * len(sentence)
+# def train():
+#     try:
+#         print('number of GPUs available:{}'.format(torch.cuda.device_count()))
+#         print('device name:{}'.format(torch.cuda.get_device_name(0)))
+#     except:
+#         pass
+#     sentence = torch.rand(100, 8, device=DEVICE)
+#     sentence = torch.abs(sentence * (10)).int()
+#     sentence_lengths = [sentence.shape[1]] * len(sentence)
 
-    model = LSTMTest()
-    model.to(DEVICE)
-    model = nn.DataParallel(model)
-    params = list(filter(lambda p: p.requires_grad, model.parameters()))
-    criterion = nn.NLLLoss()
-    optimizer = torch.optim.SGD(params, lr=0.01)
-    batch_size = 6
-    for epoch in range(100):
-        print(epoch)
-        pointer = 0
-        while pointer + batch_size <= len(sentence):
-            # print(epoch)
-            x_batch = sentence[pointer:pointer+batch_size]
-            x_length = torch.tensor(sentence_lengths[pointer:pointer+batch_size]).to(DEVICE)
-            y = x_batch
-            hidden = model.module.init_hidden(batch_size=batch_size)
-            y_pred, tag_space = model(x_batch, x_length, hidden)
-            loss = criterion(y_pred.view(-1,y_pred.shape[-1]), y.long().view(-1))
-            optimizer.zero_grad()
-            loss.backward(retain_graph=True)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
-            optimizer.step()
-            pointer = pointer + batch_size
+#     model = LSTMTest()
+#     model.to(DEVICE)
+#     model = nn.DataParallel(model)
+#     params = list(filter(lambda p: p.requires_grad, model.parameters()))
+#     criterion = nn.NLLLoss()
+#     optimizer = torch.optim.SGD(params, lr=0.01)
+#     batch_size = 6
+#     for epoch in range(100):
+#         print(epoch)
+#         pointer = 0
+#         while pointer + batch_size <= len(sentence):
+#             # print(epoch)
+#             x_batch = sentence[pointer:pointer+batch_size]
+#             x_length = torch.tensor(sentence_lengths[pointer:pointer+batch_size]).to(DEVICE)
+#             y = x_batch
+#             hidden = model.module.init_hidden(batch_size=batch_size)
+#             y_pred, tag_space = model(x_batch, x_length, hidden)
+#             loss = criterion(y_pred.view(-1,y_pred.shape[-1]), y.long().view(-1))
+#             optimizer.zero_grad()
+#             loss.backward(retain_graph=True)
+#             torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+#             optimizer.step()
+#             pointer = pointer + batch_size
 
-train()
+# train()
+
+with open('/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/data/train.txt', 'r', encoding='utf-8') as file:
+	labels = [ {c.split(' ')[0]:c.split(' ')[-1][:-1]}for c in file.readlines()]
+
+print(labels)

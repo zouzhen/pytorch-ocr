@@ -803,6 +803,7 @@ class strLabelConverter(object):
 
     def encode(self, text):
         """Support batch or single str.
+            将文字标签转化为数值标签
 
         Args:
             text (str or list of str): texts to convert.
@@ -829,6 +830,7 @@ class strLabelConverter(object):
 
     def decode(self, t, length, raw=False):
         """Decode encoded texts back into strs.
+            将数值标签转化为文字标签
 
         Args:
             torch.IntTensor [length_0 + length_1 + ... length_{n - 1}]: encoded texts.

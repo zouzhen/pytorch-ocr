@@ -5,7 +5,6 @@ import argparse
 import random
 import torch
 import torch.optim as optim
-import torch.utils.data
 import numpy as np
 from models.crnn import *
 from utils.utils import *
@@ -13,7 +12,7 @@ from utils import utils
 from utils import torch_utils
 from utils.parse_config import *
 import torch.distributed as dist
-from dataset_v2 import baiduDataset
+from utils.dataset_v2 import baiduDataset
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torch.optim.lr_scheduler as lr_scheduler
@@ -33,6 +32,10 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
+
+def backward_hook(self, grad_input, grad_output):
+    for g in grad_input:
+        g[g != g] = 0   # replace all nan/inf in gradients to zero
 
 
 def val(crnn, val_loader, criterion, iteration, dataset, device, is_mixed, converter,optimizer,loss_avg,val_dataset,params,max_i=1000):
@@ -114,8 +117,9 @@ def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, co
             loss_avg.reset()
 
 def main(cfg,
-          data,
-          epochs=300):
+         data,
+         batch_size=32,
+         epochs=300):
     # Initialize
     init_seeds()
     weights = 'weights' + os.sep
@@ -136,9 +140,9 @@ def main(cfg,
     dataset = baiduDataset(img_path, train_path, alphabet, False, params)
     val_dataset = baiduDataset(img_path, val_path, alphabet, False, params)
 
-    train_loader = DataLoader(dataset, batch_size=int(params.batchSize), shuffle=True, num_workers=int(params.workers))
+    train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=int(params.workers))
     # shuffle=True, just for time consuming.
-    val_loader = DataLoader(val_dataset, batch_size=int(params.val_batchSize), shuffle=True, num_workers=int(params.workers))
+    val_loader = DataLoader(val_dataset, batch_size=int(batch_size/2), shuffle=True, num_workers=int(params.workers))
     converter = utils.strLabelConverter(dataset.alphabet)
     nclass = len(alphabet) + 1
     nc = 1
@@ -199,11 +203,6 @@ def main(cfg,
     torch.cuda.empty_cache()
 
 
-
-def backward_hook(self, grad_input, grad_output):
-    for g in grad_input:
-        g[g != g] = 0   # replace all nan/inf in gradients to zero
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -228,4 +227,4 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     print(opt)
 
-    main(opt.cfg,opt.data,epochs=opt.epochs)
+    main(opt.cfg,opt.data,epochs=opt.epochs,batch_size=opt.batch_size)
