@@ -9,10 +9,10 @@ from torch.autograd import Variable
 from utils import utils
 import models.crnn as crnn
 from utils.parse_config import *
-# from utils import alphabets
+from utils import alphabets
 # import params
 import argparse
-# str2 = alphabets.alphabet
+str2 = alphabets.alphabet
 str1 = parse_data_name('./data/ocr.names')
 
 assert str1 == str2

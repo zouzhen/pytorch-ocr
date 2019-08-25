@@ -7,11 +7,10 @@ import math
 import os
 import torch
 from skimage.transform import resize
-import params
 from PIL import Image
 
 class baiduDataset(Dataset):
-	def __init__(self, img_root, label_path, alphabet, isBaidu, resize, transforms=None):
+	def __init__(self, img_root, label_path, alphabet, isBaidu, params, transforms=None):
 		super(baiduDataset, self).__init__()
 		self.img_root = img_root
 		self.isBaidu = isBaidu
@@ -19,7 +18,8 @@ class baiduDataset(Dataset):
 		# print(self.labels[:10])
 		self.alphabet = alphabet
 		self.transforms = transforms
-		self.width, self.height = resize
+		self.params = params
+		self.width, self.height = params.imgW, params.imgH
 		# print(list(self.labels[1].values())[0])
 	def get_labels(self, label_path):
 		# return text labels in a list
@@ -52,7 +52,7 @@ class baiduDataset(Dataset):
 		## already have been computed
 		image = image.astype(np.float32) / 255.
 		image = torch.from_numpy(image).type(torch.FloatTensor)
-		image.sub_(float(params.mean)).div_(float(params.std))
+		image.sub_(self.params.mean).div_(self.params.std)
 
 		return image
 

@@ -35,7 +35,7 @@ def weights_init(m):
         m.bias.data.fill_(0)
 
 
-def val(crnn, val_loader, criterion, iteration, dataset, device, is_mixed, converter,optimizer,loss_avg,val_dataset,max_i=1000):
+def val(crnn, val_loader, criterion, iteration, dataset, device, is_mixed, converter,optimizer,loss_avg,val_dataset,params,max_i=1000):
 
     print('Start val')
     for p in crnn.parameters():
@@ -82,7 +82,7 @@ def val(crnn, val_loader, criterion, iteration, dataset, device, is_mixed, conve
 
     return accuracy
 
-def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, converter,optimizer,loss_avg):
+def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, converter,optimizer,loss_avg,params):
 
     for p in crnn.parameters():
         p.requires_grad = True
@@ -115,7 +115,7 @@ def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, co
 
 def main(cfg,
           data,
-          epochs=300):  # effective bs = batch_size * accumulate = 16 * 4 = 64
+          epochs=300):
     # Initialize
     init_seeds()
     weights = 'weights' + os.sep
@@ -129,11 +129,12 @@ def main(cfg,
     img_path = data_dict['images']
     alphabet = parse_data_name(data_dict['alphabet'])
     params = parse_dict2params(cfg)
+    # print(params)
     # print(type(params.workers))
     # print(params)
 
-    dataset = baiduDataset(img_path, train_path, alphabet, False, (int(params.imgW), int(params.imgH)))
-    val_dataset = baiduDataset(img_path, val_path, alphabet, False, (int(params.imgW), int(params.imgH)))
+    dataset = baiduDataset(img_path, train_path, alphabet, False, params)
+    val_dataset = baiduDataset(img_path, val_path, alphabet, False, params)
 
     train_loader = DataLoader(dataset, batch_size=int(params.batchSize), shuffle=True, num_workers=int(params.workers))
     # shuffle=True, just for time consuming.
@@ -154,12 +155,12 @@ def main(cfg,
 
     # setup optimizer
     if params.adam:
-        optimizer = optim.Adam(crnn.parameters(), lr=float(params.lr),
-                               betas=(float(params.beta1), 0.999))
+        optimizer = optim.Adam(crnn.parameters(), lr=params.lr,
+                               betas=(params.beta1, 0.999))
     elif params.adadelta:
-        optimizer = optim.Adadelta(crnn.parameters(), lr=float(params.lr))
+        optimizer = optim.Adadelta(crnn.parameters(), lr=params.lr)
     else:
-        optimizer = optim.RMSprop(crnn.parameters(), lr=float(params.lr))
+        optimizer = optim.RMSprop(crnn.parameters(), lr=params.lr)
 
     crnn.register_backward_hook(backward_hook)
 
@@ -183,15 +184,16 @@ def main(cfg,
     scheduler.last_epoch = Iteration - 1
 
     while Iteration < epochs:
-        train(crnn, train_loader, criterion, Iteration, dataset, device, is_mixed, converter,optimizer,loss_avg)
+        train(crnn, train_loader, criterion, Iteration, dataset, device, is_mixed, converter,optimizer,loss_avg,params)
         ## max_i: cut down the consuming time of testing, if you'd like to validate on the whole testset, please set it to len(val_loader)
-        accuracy = val(crnn, val_loader, criterion, Iteration, dataset, device, is_mixed, converter,optimizer, loss_avg,val_dataset,max_i=1000)
-        for p in crnn.parameters():
-            p.requires_grad = True
-        if accuracy > int(params.best_accuracy):
-            torch.save(crnn.state_dict(), '{0}/crnn_Rec_done_{1}_{2}.pth'.format(weights, Iteration, accuracy))
-            torch.save(crnn.state_dict(), '{0}/crnn_best.pth'.format(weights))
-        print("is best accuracy: {0}".format(accuracy > int(params.best_accuracy)))
+        if Iteration % 10 == 0 and Iteration != 0:
+            accuracy = val(crnn, val_loader, criterion, Iteration, dataset, device, is_mixed, converter,optimizer, loss_avg,val_dataset,params,max_i=1000)
+            for p in crnn.parameters():
+                p.requires_grad = True
+            if accuracy > int(params.best_accuracy):
+                torch.save(crnn.state_dict(), '{0}/crnn_Rec_done_{1}_{2}.pth'.format(weights, Iteration, accuracy))
+                torch.save(crnn.state_dict(), '{0}/crnn_best.pth'.format(weights))
+            print("is best accuracy: {0}".format(accuracy > params.best_accuracy))
         Iteration+=1
     dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
     torch.cuda.empty_cache()

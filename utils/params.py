@@ -1,4 +1,4 @@
-import alphabets
+from utils import alphabets
 
 random_sample = True
 best_accuracy = 50

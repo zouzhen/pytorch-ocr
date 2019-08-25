@@ -1,3 +1,5 @@
+import re
+
 def parse_model_cfg(path):
     """Parses the yolo-v3 layer configuration file and returns module definitions"""
     file = open(path, 'r')
@@ -19,7 +21,7 @@ def parse_model_cfg(path):
     return module_defs
 
 
-def parse_data_cfg(path):
+def parse_data_cfg(path,is_num=False):
     """Parses the data configuration file"""
     options = dict()
     options['gpus'] = '0,1,2,3'
@@ -31,7 +33,17 @@ def parse_data_cfg(path):
         if line == '' or line.startswith('#'):
             continue
         key, value = line.split('=')
-        options[key.strip()] = value.strip()
+        if is_num:
+            value = value.strip()
+            if is_number(value):
+                if value.isdigit():
+                    options[key.strip()] = int(value)
+                else:
+                    options[key.strip()] = float(value)
+            else:
+                options[key.strip()] = value.strip()
+        else:
+            options[key.strip()] = value.strip()
     return options
 
 def parse_data_name(path):
@@ -50,10 +62,18 @@ class AttrDict(dict):
         self.__dict__ = self
 
 def parse_dict2params(path):
-    return AttrDict(parse_data_cfg(path))
+    return AttrDict(parse_data_cfg(path,is_num=True))
 
 def parse_params2dict(opt,config):
     opt = vars(opt)
     for key in opt:
         if key not in config:
             config[key] = opt[key]
+
+def is_number(num):
+    pattern = re.compile(r'^[-+]?[-0-9]\d*\.\d*|[-+]?\.?[0-9]\d*$')
+    result = pattern.match(num)
+    if result:
+        return True
+    else:
+        return False
