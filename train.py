@@ -91,7 +91,7 @@ def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, co
         p.requires_grad = True
     crnn.train()
     for i_batch, (image, index) in enumerate(train_loader):
-        print('训练轮数：',i_batch,mixed_precision)
+        # print('训练轮数：',i_batch,mixed_precision)
         image = image.to(device)
         label = utils.get_batch_label(dataset, index)
         preds = crnn(image,is_mixed=is_mixed)
@@ -140,9 +140,9 @@ def main(cfg,
     dataset = baiduDataset(img_path, train_path, alphabet, False, params)
     val_dataset = baiduDataset(img_path, val_path, alphabet, False, params)
 
-    train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=int(params.workers))
+    train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=params.workers)
     # shuffle=True, just for time consuming.
-    val_loader = DataLoader(val_dataset, batch_size=int(batch_size/2), shuffle=True, num_workers=int(params.workers))
+    val_loader = DataLoader(val_dataset, batch_size=int(batch_size/2), shuffle=True, num_workers=params.workers)
     converter = utils.strLabelConverter(dataset.alphabet)
     nclass = len(alphabet) + 1
     nc = 1
@@ -151,7 +151,7 @@ def main(cfg,
     criterion = torch.nn.CTCLoss(reduction='sum')
 
     # cnn and rnn
-    crnn = CRNN(32, nc, nclass, int(params.nh))
+    crnn = CRNN(32, nc, nclass, params.nh)
     crnn.apply(weights_init)
 
     # loss averager
@@ -188,6 +188,7 @@ def main(cfg,
     scheduler.last_epoch = Iteration - 1
 
     while Iteration < epochs:
+        scheduler.step()
         train(crnn, train_loader, criterion, Iteration, dataset, device, is_mixed, converter,optimizer,loss_avg,params)
         ## max_i: cut down the consuming time of testing, if you'd like to validate on the whole testset, please set it to len(val_loader)
         if Iteration % 10 == 0 and Iteration != 0:
@@ -195,10 +196,11 @@ def main(cfg,
             for p in crnn.parameters():
                 p.requires_grad = True
             if accuracy > int(params.best_accuracy):
-                torch.save(crnn.state_dict(), '{0}/crnn_Rec_done_{1}_{2}.pth'.format(weights, Iteration, accuracy))
-                torch.save(crnn.state_dict(), '{0}/crnn_best.pth'.format(weights))
-            print("is best accuracy: {0}".format(accuracy > params.best_accuracy))
+                torch.save(crnn.state_dict(), best)
+                torch.save(crnn.state_dict(), '{0}/crnn_Rec_done_{1}_{2}.pth'.format(weights, Iteration,accuracy))
+                print("is best accuracy: {0}".format(accuracy > params.best_accuracy))
         Iteration+=1
+        torch.save(crnn.state_dict(), last)
     dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
     torch.cuda.empty_cache()
 
@@ -207,7 +209,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=300, help='number of epochs')
-    parser.add_argument('--batch-size', type=int, default=32, help='batch size')
+    parser.add_argument('--batch-size', type=int, default=64, help='batch size')
     parser.add_argument('--accumulate', type=int, default=2, help='number of batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/params.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/ocr.data', help='coco.data file path')

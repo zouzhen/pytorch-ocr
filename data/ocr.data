@@ -1,7 +1,7 @@
 classes=15
 images=./data/images
-train=./data/train.txt
-valid=./data/val.txt
+train=./data/360label/360_train.txt
+valid=./data/360label/360_test.txt
 alphabet=./data/ocr.names
 backup=backup/
 eval=coco
