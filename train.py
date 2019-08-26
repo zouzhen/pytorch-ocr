@@ -58,7 +58,7 @@ def val(crnn, val_loader, criterion, iteration, dataset, device, is_mixed, conve
         index = np.array(index.data.numpy())
         text, length = converter.encode(label)
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
-        print(preds.shape, text.shape, preds_size.shape, length.shape)
+        # print(preds.shape, text.shape, preds_size.shape, length.shape)
         cost = criterion(preds, text, preds_size, length) / batch_size
         loss_avg.add(cost)
         _, preds = preds.max(2)
@@ -90,8 +90,9 @@ def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, co
     for p in crnn.parameters():
         p.requires_grad = True
     crnn.train()
-    for i_batch, (image, index) in enumerate(train_loader):
-        # print('训练轮数：',i_batch,mixed_precision)
+    pbar = tqdm(enumerate(train_loader), total=len(train_loader))
+    for i_batch, (image, index) in pbar:
+        # print('训练轮数：',i_batch,is_mixed)
         image = image.to(device)
         label = utils.get_batch_label(dataset, index)
         preds = crnn(image,is_mixed=is_mixed)
@@ -111,10 +112,14 @@ def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, co
         optimizer.step()
         loss_avg.add(cost)
 
-        if (i_batch+1) % int(params.displayInterval) == 0:
-            print('[%d/%d][%d/%d] Loss: %f' %
-                  (iteration, params.niter, i_batch, len(train_loader), loss_avg.val()))
+        if (i_batch+1) % params.displayInterval == 0:
+            s = ('[%d/%d] Loss: %f \n') % (iteration, opt.epochs, loss_avg.val())
+            # pbar.set_description(s)
+            # print('[%d/%d][%d/%d] Loss: %f' %
+            #       (iteration, params.niter, i_batch, len(train_loader), loss_avg.val()))
             loss_avg.reset()
+        
+    return s
 
 def main(cfg,
          data,
@@ -123,8 +128,8 @@ def main(cfg,
     # Initialize
     init_seeds()
     weights = 'weights' + os.sep
-    last = weights + 'last.pth'
-    best = weights + 'best.pth'
+    last = weights + 'last.pt'
+    best = weights + 'best.pt'
     device = torch_utils.select_device(apex=mixed_precision)
 
     data_dict = parse_data_cfg(data)
@@ -171,10 +176,22 @@ def main(cfg,
     crnn = crnn.to(device)
     certerion = criterion.to(device)
 
+    start_epoch = 0
+    best_accuracy = 0
+
     if opt.resume:
-        crnn.load_state_dict(torch.load(last))
-    
-    Iteration = 0
+        chkpt = torch.load(last, map_location=device)
+        crnn.load_state_dict(chkpt['model'])
+        if chkpt['optimizer'] is not None:
+            optimizer.load_state_dict(chkpt['optimizer'])
+            best_fitness = chkpt['best_accuracy']
+
+        if chkpt['training_results'] is not None:
+            with open('results.txt', 'w') as file:
+                file.write(chkpt['training_results'])  # write results.txt
+
+        start_epoch = chkpt['epoch'] + 1
+        del chkpt
 
     if torch.cuda.device_count() > 1:
         dist.init_process_group(backend='nccl',  # 'distributed backend'
@@ -185,22 +202,55 @@ def main(cfg,
         crnn = torch.nn.parallel.DistributedDataParallel(crnn,dim=0)
 
     scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[round(opt.epochs * x) for x in [0.8, 0.9]], gamma=0.1)
-    scheduler.last_epoch = Iteration - 1
+    scheduler.last_epoch = start_epoch - 1
 
-    while Iteration < epochs:
+    for epoch in range(start_epoch, epochs):
         scheduler.step()
-        train(crnn, train_loader, criterion, Iteration, dataset, device, is_mixed, converter,optimizer,loss_avg,params)
+        s = train(crnn, train_loader, criterion, epoch, dataset, device, is_mixed, converter,optimizer,loss_avg,params)
+        with open('results.txt', 'a') as file:
+            file.write(s)
         ## max_i: cut down the consuming time of testing, if you'd like to validate on the whole testset, please set it to len(val_loader)
-        if Iteration % 10 == 0 and Iteration != 0:
-            accuracy = val(crnn, val_loader, criterion, Iteration, dataset, device, is_mixed, converter,optimizer, loss_avg,val_dataset,params,max_i=1000)
-            for p in crnn.parameters():
-                p.requires_grad = True
-            if accuracy > int(params.best_accuracy):
-                torch.save(crnn.state_dict(), best)
-                torch.save(crnn.state_dict(), '{0}/crnn_Rec_done_{1}_{2}.pth'.format(weights, Iteration,accuracy))
-                print("is best accuracy: {0}".format(accuracy > params.best_accuracy))
-        Iteration+=1
-        torch.save(crnn.state_dict(), last)
+                
+
+        save = (not opt.nosave) or ((not opt.evolve) and (epoch == epochs - 1))
+        if save:
+            if epoch % 3 == 0 and epoch != 0:
+                accuracy = val(crnn, val_loader, criterion, epoch, dataset, device, is_mixed, converter,optimizer, loss_avg,val_dataset,params,max_i=1000)
+                for p in crnn.parameters():
+                    p.requires_grad = True
+                # if accuracy > params.best_accuracy:
+                #     torch.save(crnn.state_dict(), best)
+                #     torch.save(crnn.state_dict(), '{0}/crnn_Rec_done_{1}_{2}.pth'.format(weights, Iteration,accuracy))
+                #     print("is best accuracy: {0}".format(accuracy > params.best_accuracy))
+
+                if accuracy > best_accuracy:
+                    best_accuracy = accuracy
+
+                with open('results.txt', 'r') as file:
+                    # Create checkpoint
+                    chkpt = {'epoch': epoch,
+                            'best_accuracy': best_accuracy,
+                            'training_results': file.read(),
+                            'model': crnn.module.state_dict() if type(
+                                crnn) is nn.parallel.DistributedDataParallel else crnn.state_dict(),
+                            'optimizer': optimizer.state_dict()}
+
+                # Save last checkpoint
+                torch.save(chkpt, last)
+
+                # Save best checkpoint
+                if best_accuracy == accuracy :
+                    torch.save(chkpt, '{0}/crnn_Rec_done_{1}_{2}.pt'.format(weights, epoch,accuracy))
+                    # torch.save(chkpt, best)
+
+                # Save backup every 10 epochs (optional)
+                # if epoch > 0 and epoch % 10 == 0:
+                #     torch.save(chkpt, weights + 'backup%g.pt' % epoch)
+
+                # Delete checkpoint
+                del chkpt
+        epoch+=1
+
     dist.destroy_process_group() if torch.cuda.device_count() > 1 else None
     torch.cuda.empty_cache()
 
