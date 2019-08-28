@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import re
+import time
 import argparse
 import random
 import torch
@@ -16,6 +17,7 @@ from utils.dataset_v2 import baiduDataset
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torch.optim.lr_scheduler as lr_scheduler
+
 
 mixed_precision = True
 try:  # Mixed precision training https://github.com/NVIDIA/apex
@@ -91,8 +93,9 @@ def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, co
         p.requires_grad = True
     crnn.train()
     pbar = tqdm(enumerate(train_loader), total=len(train_loader))
+    # pbar = tqdm(enumerate(train_loader), total=len(train_loader),miniters=0.05)
     for i_batch, (image, index) in pbar:
-        # print('训练轮数：',i_batch,is_mixed)
+        # print('当前轮次：',i_batch)
         image = image.to(device)
         label = utils.get_batch_label(dataset, index)
         preds = crnn(image,is_mixed=is_mixed)
@@ -113,11 +116,13 @@ def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, co
         loss_avg.add(cost)
 
         if (i_batch+1) % params.displayInterval == 0:
-            s = ('[%d/%d] Loss: %f \n') % (iteration, opt.epochs, loss_avg.val())
-            # pbar.set_description(s)
+            s = '[%d/%d] Loss: %f ' % (iteration, opt.epochs, loss_avg.val())
+            pbar.set_description(s)
             # print('[%d/%d][%d/%d] Loss: %f' %
             #       (iteration, params.niter, i_batch, len(train_loader), loss_avg.val()))
             loss_avg.reset()
+        pbar.close()
+        # time.sleep(0.1)
         
     return s
 
@@ -200,15 +205,16 @@ def main(cfg,
                                 rank=0)  # distributed training node rank
         is_mixed = True
         crnn = torch.nn.parallel.DistributedDataParallel(crnn,dim=0)
+    else:
+        is_mixed = False
 
     scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[round(opt.epochs * x) for x in [0.8, 0.9]], gamma=0.1)
     scheduler.last_epoch = start_epoch - 1
-
     for epoch in range(start_epoch, epochs):
         scheduler.step()
         s = train(crnn, train_loader, criterion, epoch, dataset, device, is_mixed, converter,optimizer,loss_avg,params)
         with open('results.txt', 'a') as file:
-            file.write(s)
+            file.write(s + '\n')
         ## max_i: cut down the consuming time of testing, if you'd like to validate on the whole testset, please set it to len(val_loader)
                 
 

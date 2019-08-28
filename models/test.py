@@ -1,7 +1,7 @@
-import torch
-import torch.nn as nn
-from torch.autograd import Variable
-from torch.nn import utils as nn_utils
+# import torch
+# import torch.nn as nn
+# from torch.autograd import Variable
+# from torch.nn import utils as nn_utils
 
 # a = [[5,7,5,3,9],[5,7,5,3,9]]
 # a_t = torch.LongTensor(a)
@@ -187,7 +187,30 @@ from torch.nn import utils as nn_utils
 
 # train()
 
-with open('/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/data/train.txt', 'r', encoding='utf-8') as file:
-	labels = [ {c.split(' ')[0]:c.split(' ')[-1][:-1]}for c in file.readlines()]
+# with open('/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/data/train.txt', 'r', encoding='utf-8') as file:
+# 	labels = [ {c.split(' ')[0]:c.split(' ')[-1][:-1]}for c in file.readlines()]
 
-print(labels)
+# print(labels)
+
+
+from tqdm import tqdm
+import time
+pbar = tqdm(range(1000,2000),mininterval=0.01)
+print(range(0,1000))
+for i in pbar:  #将range迭代器放到了tqdm中
+	# print(i)
+	time.sleep(0.05)
+	pbar.set_description("hello:%d"%i)
+	# pbar.update(3)
+	pbar.close()
+
+
+# from tqdm import tqdm
+# import time
+
+# pbar = tqdm(range(1000,1500))  #首先使用tqdm定义了一个迭代器
+# for char in pbar:
+#     time.sleep(0.1)
+#     #设置进度显示的名称使用的是set_description(设置描述):进程的名字.
+#     pbar.set_description("processing {}".format(char))  
+#     pbar.close()
