@@ -4,5 +4,5 @@ data/360label
 data/images
 result.txt
 weights/
-# utils/__pycache__
-# models/__pycache__
+utils/__pycache__
+models/__pycache__
