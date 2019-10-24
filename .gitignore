@@ -1,7 +1,8 @@
 __pycache__/
 to_lmdb/lmdb/
-data/360label
-data/images
+data/360Data
+data/vehicle
+data_generator/data_set
 result.txt
 weights/
 utils/__pycache__

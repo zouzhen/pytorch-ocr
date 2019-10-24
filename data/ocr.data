@@ -1,7 +1,7 @@
 classes=15
-images=./data/images
-train=./data/360label/360_train.txt
-valid=./data/360label/360_test.txt
+images=/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/data/vehicle/Image
+train=./data/vehicle/Main/train.txt
+valid=./data/vehicle/Main/val.txt
 alphabet=./data/ocr.names
 backup=backup/
 eval=coco

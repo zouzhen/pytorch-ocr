@@ -5,6 +5,12 @@ import numpy as np
 from to_dictionary import to_dictionary
 import os
 import cv2
+provinces = ['冀','晋','辽','吉','黑','苏','浙','皖','闽','赣','鲁','豫','鄂','湘','粤','琼','川','贵','云','陕','甘','青','鲁','鲁','鲁','鲁','鲁','鲁','鲁']
+
+letter = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','P','Q','R','S']
+num = ['2','3','4','5','6','7','8','9','0']
+
+concate = letter + num
 #dict_1 = to_dictionary('../char_std_5990.txt', 'gbk')
 #dict_2 = to_dictionary('../text_info_results.txt', 'utf-8')
 #dict_3 = to_dictionary('info.txt', 'utf-8')
@@ -21,16 +27,18 @@ import cv2
 3. 随机使用函数
 '''
 
-# 从文字库中随机选择n个字符
-def sto_choice_from_info_str(quantity=10):
-    start = random.randint(0, len(info_str)-11)
-    end = start + 10
-    random_word = info_str[start:end]
 
-    return random_word
+def random_lic_pla_gen():
+    province = random.choice(provinces)
+    city = random.choice(letter)
+    unique_code = ''.join(random.sample(concate,5))
+    lic_pla_gen = province + city + '·'  + unique_code
+    return lic_pla_gen
 
 def random_word_color():
-    font_color_choice = [[54,54,54],[54,54,54],[105,105,105]]
+    # font_color_choice = [[54,54,54],[54,54,54],[105,105,105]]
+    # font_color_choice = [[255,255,255],[0,0,0],random.sample(range(0,256),3)]
+    font_color_choice = [[255,255,255],[0,0,0],random.sample(range(0,256),3)]
     font_color = random.choice(font_color_choice)
 
     noise = np.array([random.randint(0,10),random.randint(0,10),random.randint(0,10)])
@@ -47,8 +55,8 @@ def create_an_image(bground_path, width, height):
     bground = Image.open(bground_path+bground_choice)
     #print('background:',bground_choice)
     # print(bground.size[0],bground.size[1])
-    x, y = random.randint(0,bground.size[0]-width), random.randint(0, bground.size[1]-height)
-    bground = bground.crop((x, y, x+width, y+height))
+    # x, y = random.randint(0,bground.size[0]-width), random.randint(0, bground.size[1]-height)
+    # bground = bground.crop((x, y, x+width, y+height))
 
     return bground
 
@@ -89,15 +97,14 @@ def stretching_func():
 # 随机选取文字贴合起始的坐标, 根据背景的尺寸和字体的大小选择
 def random_x_y(bground_size, font_size):
     width, height = bground_size
-    #print(bground_size)
-    # 为防止文字溢出图片，x，y要预留宽高
-    x = random.randint(0, width-font_size*10)
-    y = random.randint(0, int((height-font_size)/4))
+    x = int(font_size/5)
+    y = int((height-font_size)*2/5)
 
     return x, y
 
 def random_font_size():
-    font_size = random.randint(24,27)
+    # font_size = random.randint(50,100)
+    font_size = random.randint(125,128)
 
     return font_size
 
@@ -107,10 +114,11 @@ def random_font(font_path):
 
     return font_path + random_font
 
-def main(save_path, num, file):
+def main(save_path, name, num, file):
 
     # 随机选取10个字符
-    random_word = sto_choice_from_info_str(10)
+    province = random_lic_pla_gen()
+    # province = '鲁A·3Z288'
     # 生成一张背景图片，已经剪裁好，宽高为32*280
     raw_image = create_an_image('./background/', 280, 32)
 
@@ -122,12 +130,15 @@ def main(save_path, num, file):
     font_color = random_word_color()
 
     # 随机选取文字贴合的坐标 x,y
+    # print(raw_image.size)
     draw_x, draw_y = random_x_y(raw_image.size, font_size)
 
     # 将文本贴到背景图片
-    font = ImageFont.truetype(font_name, font_size)
+    font = ImageFont.truetype(font_name, font_size,encoding='unic')
     draw = ImageDraw.Draw(raw_image)
-    draw.text((draw_x, draw_y), random_word, fill=font_color, font=font)
+    draw.text((draw_x, draw_y), province, fill=font_color, font=font)
+
+
 
     # 随机选取作用函数和数量作用于图片
     #random_choice_in_process_func()
@@ -135,23 +146,25 @@ def main(save_path, num, file):
     #raw_image = raw_image.rotate(0.3)
     # 保存文本信息和对应图片名称
     #with open(save_path[:-1]+'.txt', 'a+', encoding='utf-8') as file:
-    file.write('10val/' + str(num)+ '.png ' + random_word + '\n')
-    raw_image.save(save_path+str(num)+'.png')
+    file.write(name + '%08d'%num+ '.jpg ' + province + '\n')
+    raw_image.save(save_path + name + '%08d'%num +'.jpg')
 
 if __name__ == '__main__':
-   
-    # 处理具有工商信息语义信息的语料库，去除空格等不必要符号
-    with open('info.txt', 'r', encoding='utf-8') as file:
-        info_list = [part.strip().replace('\t', '') for part in file.readlines()]
-        info_str = ''.join(info_list)
+
+    
+    # # 处理具有工商信息语义信息的语料库，去除空格等不必要符号
+    # with open('info.txt', 'r', encoding='utf-8') as file:
+    #     info_list = [part.strip().replace('\t', '') for part in file.readlines()]
+    #     info_str = ''.join(info_list)
 
     # 图片标签
     file  = open('data_set/val_set.txt', 'w', encoding='utf-8')
-    total = 1000
+    name = ''.join(random.sample(concate,5))
+    total = 10
     for num in range(0,total):
-        main('data_set/val_set/', num, file)
-        if num % 1000 == 0:
-            print('[%d/%d]'%(num,total))
+        main('data_set/val_set1/', name, num, file)
+        # if num % 1000 == 0:
+        print('[%d/%d]'%(num,total))
     file.close()
 
 

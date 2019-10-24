@@ -60,6 +60,7 @@ class baiduDataset(Dataset):
 		image_name = list(self.labels[index].keys())[0]
 		# print(image_name)
 		# label = list(self.labels[index].values())[0]
+		print(self.img_root+'/'+image_name)
 		image = cv2.imread(self.img_root+'/'+image_name)
 		# print(self.img_root+'/'+image_name)
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

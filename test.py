@@ -19,14 +19,14 @@ assert str1 == str2
 
 params = parse_dict2params('./cfg/params.cfg')
 parser = argparse.ArgumentParser()
-parser.add_argument('--images_path', type=str, default='test_images/7.jpeg', help='the path to your images')
+parser.add_argument('--images_path', type=str, default='13.jpg', help='the path to your images')
 opt = parser.parse_args()
 
 
 # crnn params
 # 3p6m_third_ac97p8.pth
 crnn_model_path = 'weights/mixed_second_finetune_acc97p7.pth'
-# crnn_model_path = 'crnn_Rec_done_1.pth'
+#crnn_model_path = 'crnn_Rec_done_1.pth'
 alphabet = str1
 print(len(alphabet))
 nclass = len(alphabet)+1
