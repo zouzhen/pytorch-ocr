@@ -38,7 +38,7 @@ def random_lic_pla_gen():
 def random_word_color():
     # font_color_choice = [[54,54,54],[54,54,54],[105,105,105]]
     # font_color_choice = [[255,255,255],[0,0,0],random.sample(range(0,256),3)]
-    font_color_choice = [[255,255,255],[0,0,0],random.sample(range(0,256),3)]
+    font_color_choice = [[255,255,255],[0,0,0]]
     font_color = random.choice(font_color_choice)
 
     noise = np.array([random.randint(0,10),random.randint(0,10),random.randint(0,10)])
