@@ -19,13 +19,14 @@ assert str1 == str2
 
 params = parse_dict2params('./cfg/params.cfg')
 parser = argparse.ArgumentParser()
-parser.add_argument('--images_path', type=str, default='13.jpg', help='the path to your images')
+parser.add_argument('--images_path', type=str, default='data_generator/data_set/val_set1/PK5HD00000002.jpg', help='the path to your images')
 opt = parser.parse_args()
 
 
 # crnn params
 # 3p6m_third_ac97p8.pth
-crnn_model_path = 'weights/mixed_second_finetune_acc97p7.pth'
+# crnn_model_path = 'weights/mixed_second_finetune_acc97p7.pth'
+crnn_model_path = 'weights/crnn_Rec_done_282_2.002.pt'
 #crnn_model_path = 'crnn_Rec_done_1.pth'
 alphabet = str1
 print(len(alphabet))
@@ -69,7 +70,7 @@ if __name__ == '__main__':
         model = model.cuda()
     print('loading pretrained model from {0}'.format(crnn_model_path))
     # 导入已经训练好的crnn模型
-    model.load_state_dict(torch.load(crnn_model_path))
+    model.load_state_dict(torch.load(crnn_model_path)['model'])
     
     started = time.time()
     ## read an image

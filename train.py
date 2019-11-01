@@ -128,7 +128,7 @@ def train(crnn, train_loader, criterion, iteration, dataset, device,is_mixed, co
 
 def main(cfg,
          data,
-         batch_size=32,
+         batch_size=64,
          epochs=300):
     # Initialize
     init_seeds()
@@ -265,7 +265,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=300, help='number of epochs')
-    parser.add_argument('--batch-size', type=int, default=64, help='batch size')
+    parser.add_argument('--batch-size', type=int, default=256, help='batch size')
     parser.add_argument('--accumulate', type=int, default=2, help='number of batches to accumulate before optimizing')
     parser.add_argument('--cfg', type=str, default='cfg/params.cfg', help='cfg file path')
     parser.add_argument('--data', type=str, default='data/ocr.data', help='coco.data file path')
