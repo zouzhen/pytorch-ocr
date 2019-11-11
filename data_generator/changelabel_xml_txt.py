@@ -54,8 +54,9 @@ class Consumer(Process):
         root = tree.getroot()
         root.find('filename').text = item
         label_str = self.data[self.data[0]==item].values
+        label_str = label_str[0][1].replace('·', '')
         for index,obj in enumerate(root.findall('object')):
-            obj.find('name').text = img_label[label_str[0][1][index]]
+            obj.find('name').text = img_label[label_str[index]]
             bbox = obj.find('bndbox')
             # Make pixel indexes 0-based
             x1 = int(bbox.find('xmin').text)
