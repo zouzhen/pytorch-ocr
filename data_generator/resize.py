@@ -1,8 +1,14 @@
 import cv2
+import os
+file_path = 'D:\\SoftWork\\WorkSpaces\\Node_interconnection\\Code\\data_generator\\background'
 
-image = cv2.imread('/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/13.jpg')
+file_list = os.listdir(file_path)
 
-img = cv2.resize(image,(450,150),interpolation=cv2.INTER_NEAREST)
-cv2.imwrite('/home/lzc274500/WorkSpace/ZOUZHEN/Pytorch/crnn_chinese_characters_rec/13.jpg',img)
+for file_name in file_list:
+
+  image = cv2.imread(os.path.join(file_path,file_name))
+
+  img = cv2.resize(image,(450,220),interpolation=cv2.INTER_NEAREST)
+  cv2.imwrite(os.path.join(file_path,file_name),img)
 
 # import numpy
