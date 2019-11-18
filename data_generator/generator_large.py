@@ -6,9 +6,9 @@ from to_dictionary import to_dictionary
 import os
 import cv2
 # provinces = ['冀','晋','辽','吉','黑','苏','浙','皖','闽','赣','鲁','豫','鄂','湘','粤','琼','川','贵','云','陕','甘','青']
-provinces = ['黑','鲁','粤','京']
+provinces = ['黑','鲁','粤','冀','苏','辽','鄂','京']
 
-letter = ['A','B','D','F','U','R','S']
+letter = ['A','B','C','D','E','F','G','H','K','J','L','P','Q','R','S','U','V']
 num = ['2','3','4','5','6','7','8','9','0']
 
 concate = letter + num
@@ -135,10 +135,10 @@ def main(save_path, name, num, file):
 
     # 随机选取10个字符
     # province = random_lic_pla_gen()
-    # top = '鲁·Q'
-    # bottom = 'H997挂'
-    top = random_str_top()
-    bottom = random_str_bottom()
+    top = '鲁·G'
+    bottom = 'H997挂'
+    # top = random_str_top()
+    # bottom = random_str_bottom()
     # 生成一张背景图片，已经剪裁好，宽高为32*280
     raw_image = create_an_image('./background1/', 280, 32)
 
@@ -155,8 +155,8 @@ def main(save_path, name, num, file):
     draw_x1, draw_y1 = random_top(raw_image.size, font_size)
 
     # 将文本贴到背景图片
-    font_bottom = ImageFont.truetype('data_generator/font/BOTTOM.ttf', font_size,encoding='unic')
-    font_top = ImageFont.truetype('data_generator/font/TOP.ttf', 120,encoding='unic')
+    font_bottom = ImageFont.truetype('font/BOTTOM.ttf', font_size,encoding='unic')
+    font_top = ImageFont.truetype('font/TOP.ttf', 120,encoding='unic')
 
     draw = ImageDraw.Draw(raw_image)
     draw.text((draw_x, draw_y), bottom, fill=font_color, font=font_bottom)
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     # 图片标签
     file  = open('data_set/val_set.txt', 'w', encoding='utf-8')
     name = ''.join(random.sample(concate,5))
-    total = 20
+    total = 2
     for num in range(0,total):
         main('data_set/val_set/',  name, num, file)
         # if num % 1000 == 0:
