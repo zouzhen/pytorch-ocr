@@ -9,7 +9,7 @@ import cv2
 provinces = ['黑','鲁','粤','冀','苏','辽','鄂','京']
 
 letter = ['A','B','C','D','E','F','G','H','K','J','L','P','Q','R','S','U','V']
-num = ['2','3','4','5','6','7','8','9','0']
+num = ['1','2','3','4','5','6','7','8','9','0']
 
 concate = letter + num
 #dict_1 = to_dictionary('../char_std_5990.txt', 'gbk') unicode_escape
