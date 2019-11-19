@@ -149,9 +149,7 @@ def main(save_path, name, num, file):
     file.write(name + '%08d'%num+ '.jpg ' + province + '\n')
     raw_image.save(save_path + name + '%08d'%num +'.jpg')
 
-if __name__ == '__main__':
-
-    
+if __name__ == '__main__':    
     # # 处理具有工商信息语义信息的语料库，去除空格等不必要符号
     # with open('info.txt', 'r', encoding='utf-8') as file:
     #     info_list = [part.strip().replace('\t', '') for part in file.readlines()]

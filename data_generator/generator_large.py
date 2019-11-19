@@ -12,15 +12,6 @@ letter = ['A','B','C','D','E','F','G','H','K','J','L','P','Q','R','S','U','V']
 num = ['1','2','3','4','5','6','7','8','9','0']
 
 concate = letter + num
-#dict_1 = to_dictionary('../char_std_5990.txt', 'gbk') unicode_escape
-#dict_2 = to_dictionary('../text_info_results.txt', 'utf-8')
-#dict_3 = to_dictionary('info.txt', 'utf-8')
-
-
-#print(len(info_str))
-# print(dict_1)
-# print(dict_2)
-# print(dict_3)
 
 '''
 1. 从文字库随机选择10个字符
@@ -174,8 +165,6 @@ def main(save_path, name, num, file):
     raw_image.save(save_path + name + '%08d'%num +'.jpg')
 
 if __name__ == '__main__':
-
-    
     # # 处理具有工商信息语义信息的语料库，去除空格等不必要符号
     # with open('info.txt', 'r', encoding='utf-8') as file:
     #     info_list = [part.strip().replace('\t', '') for part in file.readlines()]
