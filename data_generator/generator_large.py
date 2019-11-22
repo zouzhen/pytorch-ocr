@@ -5,10 +5,11 @@ import numpy as np
 from to_dictionary import to_dictionary
 import os
 import cv2
+from skimage import util
 # provinces = ['冀','晋','辽','吉','黑','苏','浙','皖','闽','赣','鲁','豫','鄂','湘','粤','琼','川','贵','云','陕','甘','青']
-provinces = ['黑','鲁','粤','冀','苏','辽','鄂','京']
+provinces = ['黑','鲁','粤','冀','苏','辽','鄂','京','浙','沪','津','晋','新']
 
-letter = ['A','B','C','D','E','F','G','H','K','J','L','P','Q','R','S','U','V']
+letter = ['A','B','C','D','E','F','G','H','J','K','L','P','R','S','U','V']
 num = ['1','2','3','4','5','6','7','8','9','0']
 
 concate = letter + num
@@ -74,7 +75,7 @@ def darken_func(image):
     #                         )
 
     filter_ = random.choice(
-                            [ImageFilter.GaussianBlur(radius=1.3)]
+                            [ImageFilter.GaussianBlur(radius=3)]
                             )
     image = image.filter(filter_)
     #image = img.resize((290,32))
@@ -87,8 +88,16 @@ def rotate_func():
     pass
 
 # 噪声函数
-def random_noise_func():
-    pass
+def random_noise_func(image):
+    noise_mode = ['gaussian','poisson','salt','pepper','s&p','speckle']
+    raw_image = np.array(image)
+    noise_img = util.random_noise(raw_image,mode=random.choice(noise_mode))
+    
+    noise_img = noise_img*255
+    
+    raw_image_nosie = noise_img.astype(np.uint8)
+    result_image = Image.fromarray(raw_image_nosie)
+    return result_image
 
 # 字体拉伸函数
 def stretching_func():
@@ -125,7 +134,7 @@ def random_font(font_path):
 def main(save_path, name, num, file):
 
     # 随机选取10个字符
-    # province = random_lic_pla_gen()
+    noise_random = random.random()
     top = '鲁·G'
     bottom = 'H997挂'
     # top = random_str_top()
@@ -158,6 +167,8 @@ def main(save_path, name, num, file):
     # 随机选取作用函数和数量作用于图片
     #random_choice_in_process_func()
     raw_image = darken_func(raw_image)
+    if noise_random >= 0.3:
+        raw_image = random_noise_func(raw_image)
     #raw_image = raw_image.rotate(0.3)
     # 保存文本信息和对应图片名称
     #with open(save_path[:-1]+'.txt', 'a+', encoding='utf-8') as file:
