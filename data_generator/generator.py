@@ -5,6 +5,7 @@ import numpy as np
 from to_dictionary import to_dictionary
 import os
 import cv2
+from skimage import util
 provinces = ['冀','晋','辽','吉','黑','苏','浙','皖','闽','赣','鲁','豫','鄂','湘','粤','琼','川','贵','云','陕','甘','青','鲁','鲁','鲁','鲁','鲁','鲁','鲁']
 
 letter = ['A','B','C','D','E','F','G','H','J','K','L','M','N','P','Q','R','S']
@@ -71,10 +72,14 @@ def darken_func(image):
     #.GaussianBlur(radius=2 or 1)
     # .MedianFilter(size=3)
     # 随机选取模糊参数
+    # filter_ = random.choice(
+    #                         [ImageFilter.SMOOTH,
+    #                         ImageFilter.SMOOTH_MORE,
+    #                         ImageFilter.GaussianBlur(radius=1.3)]
+    #                         )
+
     filter_ = random.choice(
-                            [ImageFilter.SMOOTH,
-                            ImageFilter.SMOOTH_MORE,
-                            ImageFilter.GaussianBlur(radius=1.3)]
+                            [ImageFilter.GaussianBlur(radius=random.uniform(1.1,2.5))]
                             )
     image = image.filter(filter_)
     #image = img.resize((290,32))
@@ -87,8 +92,16 @@ def rotate_func():
     pass
 
 # 噪声函数
-def random_noise_func():
-    pass
+def random_noise_func(image):
+    noise_mode = ['gaussian','poisson','salt','pepper','s&p','speckle']
+    raw_image = np.array(image)
+    noise_img = util.random_noise(raw_image,mode=random.choice(noise_mode))
+    
+    noise_img = noise_img*255
+    
+    raw_image_nosie = noise_img.astype(np.uint8)
+    result_image = Image.fromarray(raw_image_nosie)
+    return result_image
 
 # 字体拉伸函数
 def stretching_func():
@@ -117,6 +130,7 @@ def random_font(font_path):
 def main(save_path, name, num, file):
 
     # 随机选取10个字符
+    noise_random = random.random()
     province = random_lic_pla_gen()
     # province = '鲁A·3Z288'
     # 生成一张背景图片，已经剪裁好，宽高为32*280
@@ -134,7 +148,7 @@ def main(save_path, name, num, file):
     draw_x, draw_y = random_x_y(raw_image.size, font_size)
 
     # 将文本贴到背景图片
-    font = ImageFont.truetype(font_name, font_size,encoding='unic')
+    font = ImageFont.truetype('font/QICHECHEPAIZT-B02S.ttf', font_size,encoding='unic')
     draw = ImageDraw.Draw(raw_image)
     draw.text((draw_x, draw_y), province, fill=font_color, font=font)
 
@@ -143,6 +157,8 @@ def main(save_path, name, num, file):
     # 随机选取作用函数和数量作用于图片
     #random_choice_in_process_func()
     raw_image = darken_func(raw_image)
+    if noise_random >= 0.3:
+        raw_image = random_noise_func(raw_image)
     #raw_image = raw_image.rotate(0.3)
     # 保存文本信息和对应图片名称
     #with open(save_path[:-1]+'.txt', 'a+', encoding='utf-8') as file:
@@ -156,11 +172,13 @@ if __name__ == '__main__':
     #     info_str = ''.join(info_list)
 
     # 图片标签
-    file  = open('data_set/val_set.txt', 'w', encoding='utf-8')
+    # file  = open('data_set/val_set.txt', 'w', encoding='utf-8')
+    file  = open('/media/lzc274500/Elements SE/QingdaoAI/车牌数据集/11-22/singlevehicle.txt', 'w', encoding='utf-8')
     name = ''.join(random.sample(concate,5))
-    total = 10
+    total = 600000
     for num in range(0,total):
-        main('data_set/val_set1/', name, num, file)
+        # main('data_set/val_set1/', name, num, file)
+        main('/media/lzc274500/Elements SE/QingdaoAI/车牌数据集/11-22/singlevehicle/', name, num, file)
         # if num % 1000 == 0:
         print('[%d/%d]'%(num,total))
     file.close()

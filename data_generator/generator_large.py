@@ -7,7 +7,7 @@ import os
 import cv2
 from skimage import util
 # provinces = ['冀','晋','辽','吉','黑','苏','浙','皖','闽','赣','鲁','豫','鄂','湘','粤','琼','川','贵','云','陕','甘','青']
-provinces = ['黑','鲁','粤','冀','苏','辽','鄂','京','浙','沪','津','晋','新']
+provinces = ['黑','鲁','粤','冀','苏','辽','鄂','京','浙','沪','津','晋','新','皖']
 
 letter = ['A','B','C','D','E','F','G','H','J','K','L','P','R','S','U','V']
 num = ['1','2','3','4','5','6','7','8','9','0']
@@ -75,7 +75,7 @@ def darken_func(image):
     #                         )
 
     filter_ = random.choice(
-                            [ImageFilter.GaussianBlur(radius=3)]
+                            [ImageFilter.GaussianBlur(radius=random.uniform(1.1,2.5))]
                             )
     image = image.filter(filter_)
     #image = img.resize((290,32))
@@ -135,10 +135,10 @@ def main(save_path, name, num, file):
 
     # 随机选取10个字符
     noise_random = random.random()
-    top = '鲁·G'
-    bottom = 'H997挂'
-    # top = random_str_top()
-    # bottom = random_str_bottom()
+    # top = '鲁·G'
+    # bottom = 'H997挂'
+    top = random_str_top()
+    bottom = random_str_bottom()
     # 生成一张背景图片，已经剪裁好，宽高为32*280
     raw_image = create_an_image('./background1/', 280, 32)
 
@@ -182,11 +182,13 @@ if __name__ == '__main__':
     #     info_str = ''.join(info_list)
 
     # 图片标签
-    file  = open('data_set/val_set.txt', 'w', encoding='utf-8')
+    # file  = open('data_set/val_set.txt', 'w', encoding='utf-8')
+    file  = open('/media/lzc274500/Elements SE/QingdaoAI/车牌数据集/11-22/doublevehicle.txt', 'w', encoding='utf-8')
     name = ''.join(random.sample(concate,5))
-    total = 2
+    total = 200000
     for num in range(0,total):
-        main('data_set/val_set/',  name, num, file)
+        # main('data_set/val_set/',  name, num, file)
+        main('/media/lzc274500/Elements SE/QingdaoAI/车牌数据集/11-22/doublevehile/',  name, num, file)
         # if num % 1000 == 0:
         print('[%d/%d]'%(num,total))
     file.close()
