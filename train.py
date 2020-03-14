@@ -286,11 +286,3 @@ if __name__ == '__main__':
     print(opt)
 
     main(opt.cfg,opt.data,epochs=opt.epochs,batch_size=opt.batch_size)
-
-# classes=15
-# images=./data/360Data/images
-# train=./data/360Data/360label/360_train.txt
-# valid=./data/360Data/360label/360_test.txt
-# alphabet=./data/ocr.names
-# backup=backup/
-# eval=coco
